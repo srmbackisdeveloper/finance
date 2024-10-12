@@ -1,6 +1,7 @@
-# Simple Makefile for a Go project
+protoc:
+	protoc --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative internal/proto/users.proto
 
-# Build the application
+
 all: build
 
 build:
@@ -8,11 +9,9 @@ build:
 	
 	@go build -o main cmd/api/main.go
 
-# Run the application
 run:
 	@go run cmd/api/main.go
 
-# Create DB container
 docker-run:
 	@if docker compose up 2>/dev/null; then \
 		: ; \
@@ -21,7 +20,6 @@ docker-run:
 		docker-compose up; \
 	fi
 
-# Shutdown DB container
 docker-down:
 	@if docker compose down 2>/dev/null; then \
 		: ; \
@@ -30,17 +28,14 @@ docker-down:
 		docker-compose down; \
 	fi
 
-# Test the application
 test:
 	@echo "Testing..."
 	@go test ./tests -v
 
-# Clean the binary
 clean:
 	@echo "Cleaning..."
 	@rm -f main
 
-# Live Reload
 watch:
 	@if command -v air > /dev/null; then \
 	    air; \

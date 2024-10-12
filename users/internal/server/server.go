@@ -2,38 +2,44 @@ package server
 
 import (
 	"fmt"
-	"net/http"
+	"net"
 	"os"
 	"strconv"
-	"time"
 
 	_ "github.com/joho/godotenv/autoload"
 
 	"users/internal/database"
+	pb "users/internal/proto"
+
+	"google.golang.org/grpc"
 )
 
 type Server struct {
 	port int
-
-	db database.Service
+	pb.UnimplementedUserServiceServer
+	db   database.Service
 }
 
-func NewServer() *http.Server {
+func NewServer() *grpc.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	NewServer := &Server{
 		port: port,
-
-		db: database.New(),
+		db:   database.New(),
 	}
 
-	// Declare Server config
-	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", NewServer.port),
-		Handler:      NewServer.RegisterRoutes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+	grpcServer := grpc.NewServer()
+	pb.RegisterUserServiceServer(grpcServer, NewServer)
+
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", NewServer.port))
+	if err != nil {
+		panic(fmt.Sprintf("failed to listen on port %d: %v", NewServer.port, err))
 	}
 
-	return server
+	go func() {
+		if err := grpcServer.Serve(listener); err != nil {
+			panic(fmt.Sprintf("failed to serve gRPC server: %v", err))
+		}
+	}()
+
+	return grpcServer
 }

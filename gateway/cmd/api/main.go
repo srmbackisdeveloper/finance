@@ -10,7 +10,7 @@ import (
 
 func main() {
 	grpcAddress := os.Getenv("USERS_GRPC_ADDRESS")
-	log.Printf("Connecting to U service at: %s", grpcAddress)
+	log.Printf("Connecting to USERS service at: %s", grpcAddress)
 	
 	srv, err := server.NewServer(grpcAddress)
     if err != nil {

@@ -16,7 +16,12 @@ import (
 
 type Server struct {
     port       int
-    grpcClient proto.UserServiceClient
+    usersGrpcClient proto.UserServiceClient
+    // TODO: payment service connection
+    // paymentGrpcClient proto.PaymentServiceClient 
+
+    // TODO: finance service connection
+    // financeGrpcClient proto.FinanceServiceClient
 }
 
 func NewServer(grpcAddress string) (*http.Server, error) {
@@ -27,11 +32,11 @@ func NewServer(grpcAddress string) (*http.Server, error) {
         return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
     }
 
-    grpcClient := proto.NewUserServiceClient(conn)
+    usersGrpcClient := proto.NewUserServiceClient(conn)
 
     newServer := &Server{
         port:       port,
-        grpcClient: grpcClient,
+        usersGrpcClient: usersGrpcClient,
     }
 
     httpServer := &http.Server{

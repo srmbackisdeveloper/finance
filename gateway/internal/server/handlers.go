@@ -25,7 +25,7 @@ func (s *Server) registerHandler(ctx *gin.Context) {
         Password: regPayload.Password,
     }
 
-    grpcResp, err := s.grpcClient.RegisterUser(context.Background(), grpcReq)
+    grpcResp, err := s.usersGrpcClient.RegisterUser(context.Background(), grpcReq)
     if err != nil {
         ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
         return
@@ -52,7 +52,7 @@ func (s *Server) verifyHandler(ctx *gin.Context) {
         Code:  verifyPayload.Code,
     }
 
-    grpcResp, err := s.grpcClient.VerifyUser(context.Background(), grpcReq)
+    grpcResp, err := s.usersGrpcClient.VerifyUser(context.Background(), grpcReq)
     if err != nil {
         ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify user"})
         return
@@ -79,7 +79,7 @@ func (s *Server) loginHandler(ctx *gin.Context) {
         Password: loginPayload.Password,
     }
 
-    grpcResp, err := s.grpcClient.LoginUser(context.Background(), grpcReq)
+    grpcResp, err := s.usersGrpcClient.LoginUser(context.Background(), grpcReq)
     if err != nil {
         ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Login failed"})
         return
@@ -105,7 +105,7 @@ func (s *Server) refreshTokenHandler(ctx *gin.Context) {
         RefreshToken: tokenPayload.RefreshToken,
     }
 
-    grpcResp, err := s.grpcClient.RefreshToken(context.Background(), grpcReq)
+    grpcResp, err := s.usersGrpcClient.RefreshToken(context.Background(), grpcReq)
     if err != nil {
         ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to refresh token"})
         return
@@ -128,7 +128,7 @@ func (s *Server) getUserHandler(ctx *gin.Context) {
         UserId: int32(userID.(int)), // grpc expects int32
     }
 
-    grpcResp, err := s.grpcClient.GetUser(context.Background(), grpcReq)
+    grpcResp, err := s.usersGrpcClient.GetUser(context.Background(), grpcReq)
     if err != nil {
         ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
         return

@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package users;
+
+option go_package = "./users";
+
+service UserService {
+    rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+    rpc VerifyUser(VerifyUserRequest) returns (VerifyUserResponse);
+    rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
+    rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}
+
+message RegisterUserRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message RegisterUserResponse {
+    string message = 1;
+}
+
+message VerifyUserRequest {
+    string email = 1;
+    string code = 2;
+}
+
+message VerifyUserResponse {
+    string message = 1;
+}
+
+message LoginUserRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message LoginUserResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message RefreshTokenRequest {
+    string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message GetUserRequest {
+    int64 user_id = 1;
+}
+
+message GetUserResponse {
+    int64 id = 1;
+    string name = 2;
+    string email = 3;
+    string created_at = 4;
+    string updated_at = 5;
+}

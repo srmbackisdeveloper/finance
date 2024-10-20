@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,37 +16,41 @@ import (
 )
 
 type Server struct {
-    port       int
-    usersGrpcClient proto.UserServiceClient
-    // TODO: payment service connection
-    // paymentGrpcClient proto.PaymentServiceClient 
+	port            int
+	usersGrpcClient proto.UserServiceClient
+	// TODO: payment service connection
+	// paymentGrpcClient proto.PaymentServiceClient
 
-    // TODO: finance service connection
-    // financeGrpcClient proto.FinanceServiceClient
+	// TODO: finance service connection
+	// financeGrpcClient proto.FinanceServiceClient
 }
 
-func NewServer(grpcAddress string) (*http.Server, error) {
-    port, _ := strconv.Atoi(os.Getenv("PORT"))
+func NewServer() (*http.Server, error) {
+	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	grpcAddress := os.Getenv("USERS_GRPC_ADDRESS")
+	log.Printf("Connecting to USERS service at: %s", grpcAddress)
 
-    conn, err := grpc.Dial(grpcAddress, grpc.WithInsecure())
-    if err != nil {
-        return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
-    }
+	conn, err := grpc.Dial(grpcAddress, grpc.WithInsecure())
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to gRPC server: %v", err)
+	}
 
-    usersGrpcClient := proto.NewUserServiceClient(conn)
+	log.Println("successful connection with USERS service")
 
-    newServer := &Server{
-        port:       port,
-        usersGrpcClient: usersGrpcClient,
-    }
+	usersGrpcClient := proto.NewUserServiceClient(conn)
 
-    httpServer := &http.Server{
-        Addr:         fmt.Sprintf(":%d", newServer.port),
-        Handler:      newServer.RegisterRoutes(),
-        IdleTimeout:  time.Minute,
-        ReadTimeout:  10 * time.Second,
-        WriteTimeout: 30 * time.Second,
-    }
+	newServer := &Server{
+		port:            port,
+		usersGrpcClient: usersGrpcClient,
+	}
 
-    return httpServer, nil
+	httpServer := &http.Server{
+		Addr:         fmt.Sprintf(":%d", newServer.port),
+		Handler:      newServer.RegisterRoutes(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
+
+	return httpServer, nil
 }

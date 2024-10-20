@@ -1,7 +1,7 @@
 # Simple Makefile for a Go project
 
 protoc:
-	@protoc --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative internal/proto/user.proto
+	@protoc --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative internal/proto/users.proto
 
 # Build the application
 all: build

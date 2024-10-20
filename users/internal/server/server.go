@@ -2,11 +2,10 @@ package server
 
 import (
 	"fmt"
+	"github.com/IBM/sarama"
+	_ "github.com/joho/godotenv/autoload"
 	"net"
 	"os"
-	"strconv"
-
-	_ "github.com/joho/godotenv/autoload"
 
 	"users/internal/database"
 	pb "users/internal/proto"
@@ -15,31 +14,41 @@ import (
 )
 
 type Server struct {
-	port int
+	port string
 	pb.UnimplementedUserServiceServer
-	db   database.Service
+	db       database.Service
+	producer sarama.SyncProducer
 }
 
 func NewServer() *grpc.Server {
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	NewServer := &Server{
-		port: port,
-		db:   database.New(),
+	port := os.Getenv("PORT")
+
+	producer, err := NewKafkaProducer()
+	if err != nil {
+		panic(fmt.Sprintf("failed to create Kafka producer: %v", err))
 	}
 
-	grpcServer := grpc.NewServer()
+	NewServer := &Server{
+		port:     port,
+		db:       database.New(),
+		producer: producer,
+	}
+
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(loggingInterceptor),
+	)
 	pb.RegisterUserServiceServer(grpcServer, NewServer)
 
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", NewServer.port))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", NewServer.port))
 	if err != nil {
-		panic(fmt.Sprintf("failed to listen on port %d: %v", NewServer.port, err))
+		panic(fmt.Sprintf("failed to listen on port %s: %v", NewServer.port, err))
 	}
 
-	go func() {
-		if err := grpcServer.Serve(listener); err != nil {
-			panic(fmt.Sprintf("failed to serve gRPC server: %v", err))
-		}
-	}()
+	fmt.Printf("gRPC server USERS is starting on port %s...\n", NewServer.port)
+
+	if err = grpcServer.Serve(listener); err != nil {
+		panic(fmt.Sprintf("failed to serve gRPC server: %v", err))
+	}
 
 	return grpcServer
 }

@@ -1,34 +1,49 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
-
 	"github.com/IBM/sarama"
+	_ "github.com/joho/godotenv/autoload"
+	"os"
 )
 
-func (s *Server) KafkaProducer(topic string, message string) {
+func NewKafkaProducer() (sarama.SyncProducer, error) {
 	config := sarama.NewConfig()
-	config.Producer.RequiredAcks = sarama.WaitForAll // Ensure all brokers acknowledge
-	config.Producer.Retry.Max = 5                    // Retry up to 5 times
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Retry.Max = 5
 	config.Producer.Return.Successes = true
 
-	producer, err := sarama.NewSyncProducer([]string{"localhost:9092"}, config)
-	if err != nil {
-		log.Fatalf("failed to create Kafka producer: %v", err)
+	brokers := []string{os.Getenv("KAFKA_BROKER")}
+	return sarama.NewSyncProducer(brokers, config)
+}
+
+func (s *Server) SendUserRegistered(email, code string) error {
+	topic := "user-registered"
+
+	message := struct {
+		Email string `json:"email"`
+		Code  string `json:"code"`
+	}{
+		Email: email,
+		Code:  code,
 	}
-	defer producer.Close()
+
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("failed to serialize message: %v", err)
+	}
 
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
-		Value: sarama.StringEncoder(message),
+		Value: sarama.ByteEncoder(messageBytes),
 	}
 
-	// Send the message
-	partition, offset, err := producer.SendMessage(msg)
+	partition, offset, err := s.producer.SendMessage(msg)
 	if err != nil {
-		log.Fatalf("failed to send Kafka message: %v", err)
+		return fmt.Errorf("failed to send Kafka message: %v", err)
 	}
 
 	fmt.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d)\n", topic, partition, offset)
+	return nil
 }

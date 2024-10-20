@@ -3,6 +3,7 @@ package server
 import (
 	"gateway/internal/helpers"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -26,9 +27,11 @@ func (s *Server) authMiddleware(ctx *gin.Context) {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		// sub = userID
-        userID := int(claims["sub"].(float64)) 
-        ctx.Set("userID", userID)
-    }
+		userIDStr, _ := claims["sub"].(string)
+		userID, _ := strconv.ParseInt(userIDStr, 10, 64)
+
+		ctx.Set("userID", userID)
+	}
 
 	ctx.Next()
 }

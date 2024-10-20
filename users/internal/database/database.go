@@ -13,7 +13,17 @@ import (
 )
 
 type Service interface {
-	Health() string
+	GetUserByEmail(email string) (*models.User, error)
+	GetUserById(id int64) (*models.User, error)
+
+	CreateUser(*models.User) error
+	UpdateUser(name string) error
+	DeleteUser(id int64) error
+	VerifyUser(id int64) error
+
+	StoreRefreshToken(token *models.RefreshToken) error
+	GetRefreshToken(token string) (*models.RefreshToken, error)
+	UpdateRefreshToken(storedToken, refreshToken string) error
 }
 
 type service struct {
